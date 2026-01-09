@@ -24,15 +24,21 @@
         @keyframes modalPop { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes flipHeads { 
-    0% { transform: rotateY(0) scale(1); } 
-    50% { transform: rotateY(900deg) scale(1.4); } 
-    100% { transform: rotateY(1800deg) scale(1); } 
-} 
-@keyframes flipTails { 
-    0% { transform: rotateY(0) scale(1); } 
-    50% { transform: rotateY(990deg) scale(1.4); } 
-    100% { transform: rotateY(1980deg) scale(1); } 
-}
+            0% { transform: rotateY(0) scale(1); } 
+            50% { transform: rotateY(900deg) scale(1.4); } 
+            100% { transform: rotateY(1800deg) scale(1); } 
+        } 
+        @keyframes flipTails { 
+            0% { transform: rotateY(0) scale(1); } 
+            50% { transform: rotateY(990deg) scale(1.4); } 
+            100% { transform: rotateY(1980deg) scale(1); } 
+        }
+        /* New Dice Tumble Keyframes */
+        @keyframes diceTumble {
+            0% { transform: rotateX(0) rotateY(0) rotateZ(0) scale(0.5); }
+            15% { transform: rotateX(45deg) rotateY(90deg) rotateZ(180deg) scale(1.2); }
+            100% { transform: rotateX(720deg) rotateY(1080deg) rotateZ(360deg) scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -2711,71 +2717,6 @@ if (e.code === 'Escape') {
                       </div>
                 )}
 
-                {chanceAnim && (
-                    <div className="modal-overlay">
-                        <div className="modal" style={{background:'transparent', boxShadow:'none', border:'none', pointerEvents: 'none'}}>
-{chanceAnim && (
-                    <div className="modal-overlay" style={{zIndex: 100, pointerEvents: 'auto'}}>
-                        <div className="modal" style={{background: 'rgba(15, 23, 42, 0.95)', border: '2px solid rgba(255,255,255,0.1)', position: 'relative', pointerEvents: 'auto'}}>
-                            {/* Close Button */}
-                            <button 
-                                onClick={() => setChanceAnim(null)} 
-                                className="btn"
-                                style={{position: 'absolute', top: 20, right: 20, background: 'rgba(239, 68, 68, 0.1)', border: 'none', color: '#ef4444', padding: '10px', borderRadius: '50%', cursor: 'pointer', zIndex: 110}}
-                            >
-                                <Icons.X />
-                            </button>
-
-                            {chanceAnim === 'coin' && (
-                                <>
-                                    <h2 style={{margin: '0 0 30px 0', opacity: 0.6, fontSize: '1rem', textTransform: 'uppercase', letterSpacing: 2}}>Coin Flip</h2>
-                                    <div style={{perspective: 1000, width: 150, height: 150, margin: '0 auto'}}>
-                                        <div style={{width:'100%', height:'100%', transformStyle:'preserve-3d', animation: chanceResult === 'HEADS' ? 'flipHeads 2.5s cubic-bezier(0.1, 0.7, 0.6, 1) forwards' : 'flipTails 2.5s cubic-bezier(0.1, 0.7, 0.6, 1) forwards'}}>
-                                            <div style={{position:'absolute', width:'100%', height:'100%', backfaceVisibility:'hidden', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', borderRadius:'50%', border:'8px solid #fcd34d', background:'radial-gradient(circle, #fef3c7, #d97706)', color:'#78350f'}}><div style={{fontSize:'4rem'}}>🤴</div><div style={{fontWeight:900}}>HEADS</div></div>
-                                            <div style={{position:'absolute', width:'100%', height:'100%', backfaceVisibility:'hidden', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', borderRadius:'50%', border:'8px solid #cbd5e1', background:'radial-gradient(circle, #f8fafc, #94a3b8)', color:'#334155', transform:'rotateY(180deg)'}}><div style={{fontSize:'4rem'}}>🦅</div><div style={{fontWeight:900}}>TAILS</div></div>
-                                        </div>
-                                    </div>
-                                    <div style={{marginTop: '30px', fontSize: '2.5rem', fontWeight: 900, color: '#fff', animation: 'fadeIn 0.5s ease-in forwards 2.2s', opacity: 0}}>
-                                        {chanceResult}!
-                                    </div>
-                                </>
-                            )}
-
-                            {chanceAnim === 'dice' && (
-                                <>
-                                    <h2 style={{margin: '0 0 30px 0', opacity: 0.6, fontSize: '1rem', textTransform: 'uppercase', letterSpacing: 2}}>Dice Roll</h2>
-                                    <div style={{perspective: 1000, width: 100, height: 100, margin: '20px auto'}}>
-                                        <div style={{width:'100%', height:'100%', transformStyle:'preserve-3d', animation: `roll${chanceResult} 2s cubic-bezier(0.1, 0.8, 0.2, 1) forwards`}}>
-                                            {[1,2,3,4,5,6].map(n => {
-                                                let t = ''; if(n===1) t='translateZ(50px)'; if(n===2) t='rotateX(-90deg) translateZ(50px)'; if(n===3) t='rotateY(-90deg) translateZ(50px)'; if(n===4) t='rotateY(90deg) translateZ(50px)'; if(n===5) t='rotateX(90deg) translateZ(50px)'; if(n===6) t='rotateY(180deg) translateZ(50px)';
-                                                return <div key={n} style={{position:'absolute', width:100, height:100, background:'white', border:'2px solid #ccc', borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', fontSize:40, fontWeight:'bold', color:'#333', backfaceVisibility:'hidden', transform: t}}>{n}</div>
-                                            })}
-                                        </div>
-                                    </div>
-                                    <div style={{marginTop: '30px', fontSize: '2.5rem', fontWeight: 900, color: '#fff', animation: 'fadeIn 0.5s ease-in forwards 1.8s', opacity: 0}}>
-                                        Rolled a {chanceResult}!
-                                    </div>
-                                </>
-                            )}
-
-                            <button onClick={() => setChanceAnim(null)} className="btn" style={{marginTop: '20px', width: '100%', justifyContent: 'center', background: 'rgba(255,255,255,0.1)', padding: '12px', cursor: 'pointer'}}>Dismiss</button>
-                        </div>
-                    </div>
-                )}
-                            {chanceAnim === 'dice' && (
-                                <div style={{perspective: 1000, width: 100, height: 100, margin: '20px auto'}}>
-                                    <div style={{width:'100%', height:'100%', transformStyle:'preserve-3d', animation: `roll${chanceResult} 2s cubic-bezier(0.1, 0.8, 0.2, 1) forwards`}}>
-                                        {[1,2,3,4,5,6].map(n => {
-                                            let t = ''; if(n===1) t='translateZ(50px)'; if(n===2) t='rotateX(-90deg) translateZ(50px)'; if(n===3) t='rotateY(-90deg) translateZ(50px)'; if(n===4) t='rotateY(90deg) translateZ(50px)'; if(n===5) t='rotateX(90deg) translateZ(50px)'; if(n===6) t='rotateY(180deg) translateZ(50px)';
-                                            return <div key={n} style={{position:'absolute', width:100, height:100, background:'white', border:'2px solid #ccc', borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', fontSize:40, fontWeight:'bold', color:'#333', backfaceVisibility:'hidden', transform: t}}>{n}</div>
-                                        })}
-                                    </div>
-                                    <style>{`@keyframes roll1 { 0% { transform: rotateX(0) rotateY(0); } 100% { transform: rotateX(720deg) rotateY(720deg); } } @keyframes roll2 { 0% { transform: rotateX(0) rotateY(0); } 100% { transform: rotateX(810deg) rotateY(720deg); } } @keyframes roll3 { 0% { transform: rotateX(0) rotateY(0); } 100% { transform: rotateX(720deg) rotateY(810deg); } } @keyframes roll4 { 0% { transform: rotateX(0) rotateY(0); } 100% { transform: rotateX(720deg) rotateY(630deg); } } @keyframes roll5 { 0% { transform: rotateX(0) rotateY(0); } 100% { transform: rotateX(630deg) rotateY(720deg); } } @keyframes roll6 { 0% { transform: rotateX(0) rotateY(0); } 100% { transform: rotateX(720deg) rotateY(900deg); } }`}</style>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
                 
 {winner && !battleMode && (
     <div className="modal-overlay">
@@ -2820,14 +2761,15 @@ if (e.code === 'Escape') {
                 {showImport && <ImportModal onClose={() => setShowImport(false)} onImport={performImport} />}
                 {showGroups && <GroupMakerModal names={activeNames} onClose={() => setShowGroups(false)} onStartScoring={handleStartScoring} />}
                 {showConceptEdit && <ConceptModal concepts={concepts} onClose={() => setShowConceptEdit(false)} onSave={setConcepts} />}
-                {showLineup && (
-                    <div className="modal-overlay">
+               
+              {showLineup && (
+                    <div className="modal-overlay" style={{zIndex: 100}}>
                         <div className="modal" style={{maxWidth: 500, textAlign:'left', maxHeight:'80vh', display:'flex', flexDirection:'column'}}>
                             <div style={{display:'flex', justifyContent:'space-between', marginBottom:20, alignItems:'center'}}>
                                 <h2 style={{margin:0, fontSize:'1.5rem'}}>Presentation Order</h2>
                                 <button onClick={() => setShowLineup(false)} className="btn" style={{padding:4}}><Icons.X/></button>
                             </div>
-                            <div style={{overflowY:'auto', flex:1, paddingRight:10, background:'rgba(0,0,0,0.2)', borderRadius:12, padding:10, opacity: isLineupAnimating ? 0.8 : 1, transform: isLineupAnimating ? 'scale(0.99)' : 'scale(1)', transition: 'all 0.1s'}}>
+                            <div style={{overflowY:'auto', flex:1, paddingRight:10, background:'rgba(0,0,0,0.2)', borderRadius:12, padding:10, opacity: isLineupAnimating ? 0.8 : 1}}>
                                 {lineupList.map((name, i) => (
                                     <div key={i} style={{display:'flex', alignItems:'center', gap:15, padding:'12px', background: i%2===0?'rgba(255,255,255,0.05)':'transparent', borderRadius:8, borderBottom:'1px solid rgba(255,255,255,0.05)', animation: isLineupAnimating ? 'none' : `fadeIn 0.3s ease-out forwards ${i * 0.05}s`, opacity: isLineupAnimating ? 1 : 0}}>
                                         <div style={{fontWeight:800, fontSize:'1.2rem', color: theme.accent, width: 30, textAlign:'center'}}>{i+1}</div>
@@ -2836,9 +2778,55 @@ if (e.code === 'Escape') {
                                 ))}
                             </div>
                             <div style={{marginTop:20, display:'flex', gap:10}}>
-                                <button onClick={generateLineup} disabled={isLineupAnimating} className="btn" style={{flex:1, justifyContent:'center', background:'rgba(255,255,255,0.1)', opacity: isLineupAnimating ? 0.5 : 1}}><Icons.Shuffle/> {isLineupAnimating ? "Shuffling..." : "Reshuffle"}</button>
-                                <button onClick={() => {navigator.clipboard.writeText(lineupList.map((n,i)=>`${i+1}. ${n}`).join('\\n')); alert("List copied to clipboard!");}} className="btn" style={{flex:1, justifyContent:'center', background: theme.accent, color:'white'}}><Icons.Copy/> Copy List</button>
+                                <button onClick={generateLineup} disabled={isLineupAnimating} className="btn" style={{flex:1, justifyContent:'center', background:'rgba(255,255,255,0.1)'}}><Icons.Shuffle/> {isLineupAnimating ? "Shuffling..." : "Reshuffle"}</button>
+                                <button onClick={() => {navigator.clipboard.writeText(lineupList.map((n,i)=>`${i+1}. ${n}`).join('\n')); alert("List copied to clipboard!");}} className="btn" style={{flex:1, justifyContent:'center', background: theme.accent, color:'white'}}><Icons.Copy/> Copy List</button>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* --- RESTORED 3D CHANCE MODAL --- */}
+                {chanceAnim && (
+                    <div className="modal-overlay" style={{zIndex: 9999, pointerEvents: 'auto', position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                        <div className="modal" style={{background: 'rgba(15, 23, 42, 0.98)', border: '2px solid rgba(255,255,255,0.2)', position: 'relative', width: '95%', maxWidth: '450px', padding: '40px 20px', pointerEvents: 'auto'}}>
+                            
+                            <button onClick={() => setChanceAnim(null)} style={{position: 'absolute', top: 15, right: 15, background: 'rgba(239, 68, 68, 0.1)', border: 'none', color: '#ef4444', padding: '8px', borderRadius: '50%', cursor: 'pointer', zIndex: 10001}}><Icons.X /></button>
+
+                            {chanceAnim === 'coin' && (
+                                <div style={{textAlign: 'center'}}>
+                                    <h2 style={{margin: '0 0 25px 0', opacity: 0.6, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: 2}}>Coin Flip</h2>
+                                    <div style={{perspective: 1000, width: 140, height: 140, margin: '0 auto'}}>
+                                        <div style={{width:'100%', height:'100%', transformStyle:'preserve-3d', animation: chanceResult === 'HEADS' ? 'flipHeads 2.5s cubic-bezier(0.1, 0.7, 0.6, 1) forwards' : 'flipTails 2.5s cubic-bezier(0.1, 0.7, 0.6, 1) forwards'}}>
+                                            <div style={{position:'absolute', width:'100%', height:'100%', backfaceVisibility:'hidden', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', borderRadius:'50%', border:'8px solid #fcd34d', background:'radial-gradient(circle, #fef3c7, #d97706)', color:'#78350f'}}><div style={{fontSize:'3.5rem'}}>🤴</div><div style={{fontWeight:900}}>HEADS</div></div>
+                                            <div style={{position:'absolute', width:'100%', height:'100%', backfaceVisibility:'hidden', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', borderRadius:'50%', border:'8px solid #cbd5e1', background:'radial-gradient(circle, #f8fafc, #94a3b8)', color:'#334155', transform:'rotateY(180deg)'}}><div style={{fontSize:'3.5rem'}}>🦅</div><div style={{fontWeight:900}}>TAILS</div></div>
+                                        </div>
+                                    </div>
+                                    <div style={{marginTop: '25px', fontSize: '2.5rem', fontWeight: 900, color: '#fff', animation: 'fadeIn 0.5s ease-in forwards 2.2s', opacity: 0}}>{chanceResult}!</div>
+                                </div>
+                            )}
+
+                            {chanceAnim === 'dice' && (
+                                <div style={{textAlign: 'center'}}>
+                                    <h2 style={{margin: '0 0 25px 0', opacity: 0.6, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: 2}}>Dice Roll</h2>
+                                    <div style={{perspective: 1000, width: 100, height: 100, margin: '40px auto'}}>
+                                        <div style={{
+                                            width:'100%', height:'100%', transformStyle:'preserve-3d', 
+                                            animation: 'diceTumble 2s cubic-bezier(0.1, 0.8, 0.2, 1) forwards'
+                                        }}>
+                                            {/* Restored 3D Cube Faces */}
+                                            <div style={{position:'absolute', width:100, height:100, background:'white', border:'2px solid #ccc', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', fontSize:40, fontWeight:'bold', color:'#333', transform: 'translateZ(50px)'}}>1</div>
+                                            <div style={{position:'absolute', width:100, height:100, background:'white', border:'2px solid #ccc', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', fontSize:40, fontWeight:'bold', color:'#333', transform: 'rotateX(-90deg) translateZ(50px)'}}>2</div>
+                                            <div style={{position:'absolute', width:100, height:100, background:'white', border:'2px solid #ccc', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', fontSize:40, fontWeight:'bold', color:'#333', transform: 'rotateY(-90deg) translateZ(50px)'}}>3</div>
+                                            <div style={{position:'absolute', width:100, height:100, background:'white', border:'2px solid #ccc', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', fontSize:40, fontWeight:'bold', color:'#333', transform: 'rotateY(90deg) translateZ(50px)'}}>4</div>
+                                            <div style={{position:'absolute', width:100, height:100, background:'white', border:'2px solid #ccc', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', fontSize:40, fontWeight:'bold', color:'#333', transform: 'rotateX(90deg) translateZ(50px)'}}>5</div>
+                                            <div style={{position:'absolute', width:100, height:100, background:'white', border:'2px solid #ccc', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', fontSize:40, fontWeight:'bold', color:'#333', transform: 'rotateY(180deg) translateZ(50px)'}}>6</div>
+                                        </div>
+                                    </div>
+                                    <div style={{marginTop: '40px', fontSize: '2rem', fontWeight: 900, color: '#fff', animation: 'fadeIn 0.5s ease-in forwards 1.8s', opacity: 0}}>Rolled a {chanceResult}!</div>
+                                </div>
+                            )}
+
+                            <button onClick={() => setChanceAnim(null)} className="btn" style={{marginTop: '20px', width: '100%', justifyContent: 'center', background: theme.accent, color:'white', padding: '14px', borderRadius: '12px', fontWeight: 'bold'}}>Dismiss</button>
                         </div>
                     </div>
                 )}
