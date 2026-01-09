@@ -1806,14 +1806,16 @@ const runChance = (type) => {
           const activeNames = useMemo(() => tempWheelItems || names.filter(n => !hiddenNames.includes(n)), [names, hiddenNames, tempWheelItems]);
           const activeConcepts = useMemo(() => concepts.filter(c => !hiddenConcepts.includes(c)), [concepts, hiddenConcepts]);
 
-          const saveList = () => { 
+const saveList = () => { 
               const nameToSave = newListName.trim();
               if(!nameToSave) return;
-              if (savedLists[nameToSave]) {
-                  if (!window.confirm(`Class "${nameToSave}" already exists.\n\nDo you want to UPDATE it with the current names and settings?`)) { return; }
-              }
+              
+              // CRITICAL: Update names from the current input text before saving
+              const currentRoster = inputText.split('\n').filter(n => n.trim());
+              setNames(currentRoster);
+
               const saveData = {
-                  names: names, 
+                  names: currentRoster, 
                   theme: currentThemeId, 
                   bloomMode: bloomMode, 
                   battleMode: battleMode,
@@ -1822,19 +1824,18 @@ const runChance = (type) => {
                   soundTheme: soundTheme, 
                   fairMode: fairMode, 
                   rapidTarget: rapidTarget,
-                  // NEW: Save additional state
                   stickies: stickies,
                   participation: participation,
-marbles: marbles,
-marbleTarget: marbleTarget,
-marbleReward: marbleReward
+                  marbles: marbles,
+                  marbleTarget: marbleTarget,
+                  marbleReward: marbleReward
               };
               setSavedLists(prev => {
                   const updated = {...prev, [nameToSave]: saveData};
-                  try { localStorage.setItem('spinner_lists', JSON.stringify(updated)); } catch(e) { alert("Error: Could not save to browser storage (Quota Exceeded?)"); }
+                  localStorage.setItem('spinner_lists', JSON.stringify(updated));
                   return updated;
               });
-              alert(`Session "${nameToSave}" saved successfully!`);
+              alert(`Session "${nameToSave}" saved!`);
           };
 
           const handleLoadClass = (key) => {
@@ -1884,7 +1885,7 @@ marbleReward: marbleReward
           const toggleHidden = (n) => { setHiddenNames(prev => prev.includes(n) ? prev.filter(x => x !== n) : [...prev, n]); };
           const shuffleNames = () => { const s=[...names].sort(()=>Math.random()-0.5); setInputText(s.join('\n')); setNames(s); };
           
-          const removeWinner = () => {
+const removeWinner = () => {
             if (winner && !rapidMode && winner !== "Group Complete!" && !tempWheelItems) {
                  setHiddenNames(prev => [...prev, winner]);
             }
@@ -1892,32 +1893,25 @@ marbleReward: marbleReward
             if(rapidMode) { setRapidMode(false); setRapidWinners([]); }
           };
 
-const handleImageUpload = (e) => { 
-              const f=e.target.files[0]; 
+          const handleImageUpload = (e) => { 
+              const f = e.target.files[0]; 
               if(f){ 
-                  const r=new FileReader(); 
-                  r.onload=(evt)=>{ 
-                      const i=new Image(); 
-const handleImageUpload = (e) => { 
-              const f=e.target.files[0]; 
-              if(f){ 
-                  const r=new FileReader(); 
-                  r.onload=(evt)=>{ 
-                      const i=new Image(); 
-                      i.onload=()=>{
+                  const r = new FileReader(); 
+                  r.onload = (evt) => { 
+                      const i = new Image(); 
+                      i.onload = () => {
                           setHubImage(i);
+                          // Use activeNames here so it doesn't crash on upload
                           if(canvasRef.current) drawWheel(canvasRef.current, bloomMode === 'solo' ? activeConcepts : activeNames, rotationRef.current, pointerRef.current, mysteryMode);
                       }; 
-                      i.src=evt.target.result; 
-                  }; 
-                  r.readAsDataURL(f); 
-              } 
-          }; // Added the missing closing bracket here
-                      i.src=evt.target.result; 
+                      i.src = evt.target.result; 
                   }; 
                   r.readAsDataURL(f); 
               } 
           };
+
+          const handleStartScoring = (g) => { setActiveTeams(g); setTeamScores(new Array(g.length).fill(0)); setShowGroups(false); };
+          const handleUpdateScore = (i,c) => { const n=[...teamScores]; n[i]+=c; setTeamScores(n); if(soundEnabled) playSound('tick', audioCtxRef, soundTheme); };
 
 const toggleBloomMode = () => { setBattleMode(false); if (bloomMode === 'off') setBloomMode('solo'); else if (bloomMode === 'solo') setBloomMode('dual'); else setBloomMode('off'); };
 
@@ -2719,43 +2713,34 @@ if (e.code === 'Escape') {
 
                 
 {winner && !battleMode && (
-    <div className="modal-overlay">
-        <div className="modal">
-            <div style={{width: 80, height: 80, background: '#fbbf24', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto', boxShadow: '0 0 30px rgba(251, 191, 36, 0.4)'}}><div style={{color:'#78350f'}}><Icons.Trophy/></div></div>
-            <h2 style={{margin:0, opacity: 0.6}}>Selection Results</h2>
-            
-<div className="winner-name">
-                {rapidMode ? (
-                    <div style={{fontSize: '1.5rem', display:'flex', flexDirection:'column', gap: 10, color: 'white', WebkitTextFillColor: 'white'}}>
-                        {rapidWinners.map((rw, idx) => <div key={idx}>⭐ {rw}</div>)}
+                    <div className="modal-overlay" style={{zIndex: 100}}>
+                        <div className="modal">
+                            <div style={{width: 80, height: 80, background: '#fbbf24', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto', boxShadow: '0 0 30px rgba(251, 191, 36, 0.4)'}}><div style={{color:'#78350f'}}><Icons.Trophy/></div></div>
+                            <h2 style={{margin:0, opacity: 0.6}}>Results</h2>
+                            <div className="winner-name">
+                                {rapidMode ? (
+                                    <div style={{fontSize: '1.5rem', display:'flex', flexDirection:'column', gap: 10, color: 'white'}}>
+                                        {rapidWinners.map((rw, idx) => <div key={idx}>⭐ {rw}</div>)}
+                                    </div>
+                                ) : winner}
+                            </div>
+                            {bloomMode === 'dual' && bloomWinner && !rapidMode && (
+                                <div style={{background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', padding: '10px', borderRadius: 8, marginTop: -10, marginBottom: 20, fontWeight: 700}}>
+                                    <div style={{fontSize: '0.8rem', opacity: 0.8, textTransform:'uppercase'}}>Task</div>
+                                    <div style={{fontSize: '1.5rem'}}>{bloomWinner}</div>
+                                </div>
+                            )}
+                            <div style={{display: 'flex', flexDirection: 'column', gap: 10, marginTop: 20}}>
+                                {!rapidMode && winner !== "Rapid Fire Winners!" && (
+                                    <button onClick={() => toggleHidden(winner)} className="btn" style={{justifyContent: 'center', background: hiddenNames.includes(winner) ? '#10b98122' : '#ef444422', color: hiddenNames.includes(winner) ? '#10b981' : '#ef4444'}}>
+                                        {hiddenNames.includes(winner) ? "✅ Put Back on Wheel" : "❌ Remove Winner"}
+                                    </button>
+                                )}
+                                <button onClick={removeWinner} className="btn" style={{justifyContent: 'center', background: theme.accent, color: 'white', padding: 15}}>Continue</button>
+                            </div>
+                        </div>
                     </div>
-                ) : winner}
-            </div>
-                        {bloomMode === 'dual' && bloomWinner && (
-                <div style={{background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', padding: '10px', borderRadius: 8, marginTop: -10, marginBottom: 20, fontWeight: 700}}>
-                    <div style={{fontSize: '0.8rem', opacity: 0.8, textTransform:'uppercase', letterSpacing:1}}>Challenge</div>
-                    <div style={{fontSize: '1.5rem'}}>{bloomWinner}</div>
-                </div>
-            )}
-
-            <div style={{display: 'flex', flexDirection: 'column', gap: 10, marginTop: 20}}>
-                {/* PLAYER TOGGLE */}
-                <button onClick={() => setHiddenNames(prev => prev.includes(winner) ? prev.filter(n => n !== winner) : [...prev, winner])} className="btn" style={{justifyContent: 'center', background: hiddenNames.includes(winner) ? '#ef444422' : '#10b98122', color: hiddenNames.includes(winner) ? '#ef4444' : '#10b981', border: hiddenNames.includes(winner) ? '1px solid #ef4444' : '1px solid #10b981'}}>
-                    {hiddenNames.includes(winner) ? "❌ Name Removed (Click to Keep)" : "✅ Name Keeping (Click to Remove)"}
-                </button>
-
-                {/* CONCEPT TOGGLE */}
-                {bloomMode === 'dual' && bloomWinner && (
-                    <button onClick={() => setHiddenConcepts(prev => prev.includes(bloomWinner) ? prev.filter(c => c !== bloomWinner) : [...prev, bloomWinner])} className="btn" style={{justifyContent: 'center', background: hiddenConcepts.includes(bloomWinner) ? '#ef444422' : '#10b98122', color: hiddenConcepts.includes(bloomWinner) ? '#ef4444' : '#10b981', border: hiddenConcepts.includes(bloomWinner) ? '1px solid #ef4444' : '1px solid #10b981'}}>
-                        {hiddenConcepts.includes(bloomWinner) ? "❌ Concept Removed (Click to Keep)" : "✅ Concept Keeping (Click to Remove)"}
-                    </button>
                 )}
-
-                <button onClick={() => {setWinner(null); setBloomWinner(null);}} className="btn" style={{justifyContent: 'center', background: 'rgba(255,255,255,0.1)', marginTop: 10, padding: 15}}>Close & Apply Changes</button>
-            </div>
-        </div>
-    </div>
-)}
 
                 {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
                 {showImport && <ImportModal onClose={() => setShowImport(false)} onImport={performImport} />}
