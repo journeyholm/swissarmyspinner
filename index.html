@@ -1584,6 +1584,7 @@ const initPhysics = () => {
             }
         };
           const [names, setNames] = useState(defaultNames);
+          const [fastMode, setFastMode] = useState(false);
           const [inputText, setInputText] = useState(defaultNames.join('\n'));
           const [savedLists, setSavedLists] = useState({}); const [newListName, setNewListName] = useState("");
           const [currentThemeId, setCurrentThemeId] = useState('default');
@@ -1821,8 +1822,9 @@ const saveList = () => {
         return;
     }
 
-    // Capture the latest names from the text area
+    // Force the roster to update from the text box before saving
     const currentRoster = inputText.split('\n').filter(n => n.trim());
+    setNames(currentRoster);
 
     const saveData = {
         names: currentRoster, 
@@ -1837,7 +1839,7 @@ const saveList = () => {
         localStorage.setItem('spinner_lists', JSON.stringify(updated));
         return updated;
     });
-    alert(`Session "${nameToSave}" saved successfully!`);
+    alert(`Session "${nameToSave}" saved!`);
 };
 
 const handleLoadClass = (key) => {
@@ -1955,13 +1957,31 @@ const startRapidFire = (count) => {
             ctx.beginPath(); ctx.moveTo(0, -15); ctx.lineTo(-40, 0); ctx.lineTo(0, 15); ctx.closePath(); ctx.fillStyle = theme.text; ctx.shadowColor = "rgba(0,0,0,0.3)"; ctx.shadowBlur = 5; ctx.fill(); ctx.restore();
           };
 
-          const spin = () => {
+const spin = () => {
             if (isSpinning || (bloomMode !== 'solo' && activeNames.length < 2)) return;
             setWinner(null); setBloomWinner(null); setWinnerTimerActive(false);
             if (battleMode && battleStage === 'idle') { setBattleStage('spinning1'); setBattleContestants([null, null]); }
-            velocityRef.current = 0.4 + Math.random() * 0.4;
-            if (bloomMode === 'dual') velocityRef2.current = 0.4 + Math.random() * 0.3;
-            isSpinningRef.current = true; setIsSpinning(true);
+
+            if (fastMode) {
+                // IMMEDIATE SELECTION
+                const mainList = bloomMode === 'solo' ? activeConcepts : activeNames;
+                const i = Math.floor(Math.random() * mainList.length);
+                const w = mainList[i];
+                if (w) {
+                    setWinner(w);
+                    setParticipation(prev => ({ ...prev, [w]: (prev[w] || 0) + 1 }));
+                    if (bloomMode === 'dual' && activeConcepts.length > 0) {
+                        setBloomWinner(activeConcepts[Math.floor(Math.random() * activeConcepts.length)]);
+                    }
+                    if (soundEnabled) playSound('win', audioCtxRef, soundTheme);
+                    FireConfetti(confettiCanvasRef.current);
+                }
+            } else {
+                // NORMAL ANIMATED SPIN
+                velocityRef.current = 0.4 + Math.random() * 0.4;
+                if (bloomMode === 'dual') velocityRef2.current = 0.4 + Math.random() * 0.3;
+                isSpinningRef.current = true; setIsSpinning(true);
+            }
           };
 
 useEffect(() => {
@@ -1996,12 +2016,12 @@ useEffect(() => {
                     const w = mainList[i];
 
 if (w) {
-                        if (rapidMode) {
-                            setWinner("Rapid Fire Winners!"); 
-                            // Add all rapid winners to participation
-                            rapidWinners.forEach(rw => {
-setParticipation(prev => ({ ...prev, [w]: (prev[w] || 0) + 1 }));                            });
-                        } else {
+if (rapidMode) {
+                        setWinner("Rapid Fire Winners!"); 
+                        rapidWinners.forEach(rw => {
+                            setParticipation(prev => ({ ...prev, [rw]: (prev[rw] || 0) + 1 }));
+                        });
+                    } else {
                             setWinner(w);
                             setParticipation(prev => ({ ...prev, [w]: (prev[w] || 0) + 1 }));
                             if (bloomMode === 'dual' && activeConcepts.length > 0) {
@@ -2042,25 +2062,13 @@ useEffect(() => {
           }, [bloomMode, concepts, activeNames, activeConcepts, mysteryMode]);
 
 const removeWinner = () => {
-            // If in Rapid Fire mode, hide all chosen students
             if (rapidMode && rapidWinners.length > 0) {
                  setHiddenNames(prev => [...prev, ...rapidWinners]);
-            } 
-            // Otherwise, hide the single winner
-            else if (winner && winner !== "Group Complete!" && !tempWheelItems && winner !== "Rapid Fire Winners!") {
+            } else if (winner && winner !== "Rapid Fire Winners!" && !tempWheelItems) {
                  setHiddenNames(prev => [...prev, winner]);
             }
-            
-            // Reset states for next spin
-            setWinner(null); 
-            setBloomWinner(null); 
-            setTempWheelItems(null); 
-            setChanceAnim(null); 
-            setWinnerTimerActive(false); 
-            if(rapidMode) { 
-                setRapidMode(false); 
-                setRapidWinners([]); 
-            }
+            setWinner(null); setBloomWinner(null); setTempWheelItems(null); setChanceAnim(null);
+            if(rapidMode) { setRapidMode(false); setRapidWinners([]); }
           };
 
           useEffect(() => {
@@ -2377,6 +2385,10 @@ if (e.code === 'Escape') {
                         <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap: 8}}>
                             <button onClick={shuffleNames} className="btn" style={{background: 'rgba(128,128,128,0.1)'}}><Icons.Shuffle/> Shuffle</button>
                             <button onClick={() => setMysteryMode(!mysteryMode)} className="btn" style={{background: mysteryMode ? theme.accent : 'rgba(128,128,128,0.1)', color: mysteryMode ? '#fff' : 'inherit', boxShadow: mysteryMode ? `0 0 10px ${theme.accent}` : 'none', transition: 'all 0.3s ease'}}>{mysteryMode ? <Icons.EyeOff/> : <Icons.Eye/>} {mysteryMode ? 'Mystery On' : 'Visible'}</button>
+
+                            <button onClick={() => setFastMode(!fastMode)} className="btn" style={{background: fastMode ? '#f97316' : 'rgba(128,128,128,0.1)', color: fastMode ? '#fff' : 'inherit', boxShadow: fastMode ? '0 0 10px #f97316' : 'none'}}>
+    {fastMode ? "⚡ Fast Mode: On" : "🎡 Fast Mode: Off"}
+</button>
                             
                             <button onClick={() => {setBattleMode(!battleMode); setBloomMode('off'); setBattleStage('idle'); setRapidMode(false);}} className="btn" style={{background: battleMode ? '#f59e0b' : 'rgba(128,128,128,0.1)', color: battleMode ? '#fff' : 'inherit', boxShadow: battleMode ? '0 0 10px #f59e0b' : 'none'}}><Icons.Swords/> Battle</button>
                             <button onClick={() => setFairMode(!fairMode)} className="btn" style={{background: fairMode ? '#10b981' : 'rgba(128,128,128,0.1)', color: fairMode ? '#fff' : 'inherit', boxShadow: fairMode ? '0 0 10px #10b981' : 'none'}}><Icons.Scales/> Fair Mode</button>
@@ -2738,11 +2750,7 @@ if (e.code === 'Escape') {
                             )}
 <div style={{display: 'flex', flexDirection: 'column', gap: 10, marginTop: 20}}>
                                 {winner && (
-                                    <button 
-                                        onClick={removeWinner} 
-                                        className="btn" 
-                                        style={{justifyContent: 'center', background: 'rgba(239, 68, 68, 0.2)', color: '#f87171'}}
-                                    >
+                                    <button onClick={removeWinner} className="btn" style={{justifyContent: 'center', background: 'rgba(239, 68, 68, 0.2)', color: '#f87171'}}>
                                         {rapidMode ? `❌ Hide all ${rapidWinners.length} Winners` : "❌ Hide Winner for Session"}
                                     </button>
                                 )}
@@ -2813,7 +2821,7 @@ if (e.code === 'Escape') {
                             </div>
                             <div style={{marginTop:20, display:'flex', gap:10}}>
                                 <button onClick={generateLineup} disabled={isLineupAnimating} className="btn" style={{flex:1, justifyContent:'center', background:'rgba(255,255,255,0.1)', opacity: isLineupAnimating ? 0.5 : 1}}><Icons.Shuffle/> {isLineupAnimating ? "Shuffling..." : "Reshuffle"}</button>
-                                <button onClick={() => {navigator.clipboard.writeText(lineupList.map((n,i)=>`${i+1}. ${n}`).join('\\n')); alert("List copied to clipboard!");}} className="btn" style={{flex:1, justifyContent:'center', background: theme.accent, color:'white'}}><Icons.Copy/> Copy List</button>
+                                <button onClick={() => {navigator.clipboard.writeText(lineupList.map((n,i)=>`${i+1}. ${n}`).join('\n')); alert("List copied to clipboard!");}} className="btn" style={{flex:1, justifyContent:'center', background: theme.accent, color:'white'}}><Icons.Copy/> Copy List</button>
                             </div>
                         </div>
                     </div>
