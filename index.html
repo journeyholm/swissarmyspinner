@@ -132,6 +132,8 @@
           Jar: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-12a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-16a2 2 0 0 0-2-2z"/><line x1="6" y1="2" x2="6" y2="22"/><line x1="18" y1="2" x2="18" y2="22"/><line x1="4" y1="6" x2="20" y2="6"/></svg>,
           Circle: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/></svg>,
           Speaker: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><circle cx="12" cy="14" r="4"/><line x1="12" y1="6" x2="12.01" y2="6"/></svg>,
+          Activity: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+          
         };
 
         // --- 2. THEMES & UTILS ---
@@ -366,73 +368,73 @@ const move = (e) => {
     );
 };
 
-        const Timer = ({ audioCtx, onClose }) => {
-          const [mode, setMode] = useState('stopwatch');
-          const [time, setTime] = useState(0); 
-          const [isRunning, setIsRunning] = useState(false); const [initialTime, setInitialTime] = useState(0);
-          const [viewMode, setViewMode] = useState('window'); // 'window', 'fullscreen', 'mini'
-          const timeOptions = [{label:'10s',val:10},{label:'30s',val:30},{label:'1m',val:60},{label:'2m',val:120},{label:'5m',val:300},{label:'10m',val:600},{label:'20m',val:1200},{label:'30m',val:1800},{label:'45m',val:2700},{label:'1h',val:3600}];
-          
-          useEffect(() => {
-            let interval;
-            if (isRunning) { interval = setInterval(() => { setTime(prev => { if (mode === 'timer') { if (prev <= 1) { playSound('bell', audioCtx); setIsRunning(false); return 0; } return prev - 1; } return prev + 1; }); }, 1000); }
-            return () => clearInterval(interval);
-          }, [isRunning, mode, audioCtx]);
-          
-          const formatTime = (s) => { const mins = Math.floor(s/60); const secs = s%60; return mins>=60?`${Math.floor(mins/60)}:${(mins%60).toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`:`${mins}:${secs.toString().padStart(2,'0')}`; };
-          const handleSelectTime = (e) => { const seconds = parseInt(e.target.value); if (!isNaN(seconds)) { setMode('timer'); setInitialTime(seconds); setTime(seconds); setIsRunning(false); } };
-          const handleReset = () => { setIsRunning(false); setTime(mode === 'timer' ? initialTime : 0); };
+const Timer = ({ audioCtx, onClose }) => {
+  const [mode, setMode] = useState('stopwatch');
+  const [time, setTime] = useState(0); 
+  const [isRunning, setIsRunning] = useState(false); const [initialTime, setInitialTime] = useState(0);
+  const [viewMode, setViewMode] = useState('window'); 
+  const timeOptions = [{label:'10s',val:10},{label:'30s',val:30},{label:'1m',val:60},{label:'2m',val:120},{label:'5m',val:300},{label:'10m',val:600},{label:'20m',val:1200},{label:'30m',val:1800},{label:'45m',val:2700},{label:'1h',val:3600}];
+  
+  useEffect(() => {
+    let interval;
+    if (isRunning) { interval = setInterval(() => { setTime(prev => { if (mode === 'timer') { if (prev <= 1) { playSound('bell', audioCtx); setIsRunning(false); return 0; } return prev - 1; } return prev + 1; }); }, 1000); }
+    return () => clearInterval(interval);
+  }, [isRunning, mode, audioCtx]);
+  
+  const formatTime = (s) => { const mins = Math.floor(s/60); const secs = s%60; return mins>=60?`${Math.floor(mins/60)}:${(mins%60).toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`:`${mins}:${secs.toString().padStart(2,'0')}`; };
+  const handleSelectTime = (e) => { const seconds = parseInt(e.target.value); if (!isNaN(seconds)) { setMode('timer'); setInitialTime(seconds); setTime(seconds); setIsRunning(false); } };
+  const handleReset = () => { setIsRunning(false); setTime(mode === 'timer' ? initialTime : 0); };
 
-          if (viewMode === 'fullscreen') {
-              return (
-                  <div style={{position:'fixed', inset:0, zIndex:100, background:'rgba(15,23,42,0.95)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center'}}>
-                      <div style={{fontSize:'25vw', fontWeight:900, fontFamily:'monospace', fontVariantNumeric:'tabular-nums', lineHeight:1, color: time<=10 && mode==='timer' && time>0 ? '#ef4444' : '#fff'}}>
-                          {formatTime(time)}
-                      </div>
-                      <div style={{display:'flex', gap:20, marginTop:20}}>
-                          <button onClick={()=>setIsRunning(!isRunning)} className="btn" style={{background: isRunning?'#ef4444':'#22c55e', fontSize:'2rem', padding:'15px 40px'}}>{isRunning ? <Icons.Pause/> : <Icons.Play/>}</button>
-                          <button onClick={handleReset} className="btn" style={{background:'rgba(255,255,255,0.1)', fontSize:'2rem', padding:'15px 40px'}}><Icons.RotateCcw/></button>
-                          <button onClick={()=>setViewMode('window')} className="btn" style={{background:'rgba(255,255,255,0.1)', fontSize:'2rem', padding:'15px 40px'}}><Icons.Minimize/></button>
-                      </div>
-                  </div>
-              );
-          }
-          if (viewMode === 'mini') {
-              return (
-                  <DraggableBox x={16} y={70} style={{zIndex:40}}>
-                      <div style={{background: isRunning ? (time<=10 && mode==='timer' ? '#ef4444' : '#22c55e') : '#334155', padding:'8px 12px', borderRadius:30, display:'flex', alignItems:'center', gap:10, boxShadow:'0 4px 12px rgba(0,0,0,0.3)', border:'2px solid rgba(255,255,255,0.2)'}}>
-                          <span style={{fontWeight:800, fontFamily:'monospace', fontSize:'1.2rem'}}>{formatTime(time)}</span>
-                          <button onClick={()=>setIsRunning(!isRunning)} style={{background:'none', border:'none', color:'white', cursor:'pointer'}}>{isRunning ? <Icons.Pause/> : <Icons.Play/>}</button>
-                          <button onClick={()=>setViewMode('window')} style={{background:'none', border:'none', color:'white', cursor:'pointer'}}><Icons.Maximize/></button>
-                      </div>
-                  </DraggableBox>
-              );
-          }
-          return (
-            <DraggableBox x={16} y={70} style={{zIndex:40}}>
-                <div style={{
-                    padding:'16px', background:'rgba(15,23,42,0.9)', backdropFilter:'blur(10px)',
-                    borderRadius:'16px', border:'1px solid rgba(255,255,255,0.15)',
-                    boxShadow:'0 10px 30px rgba(0,0,0,0.4)', display:'flex', flexDirection:'column',
-                    gap:'12px', minWidth:'220px'
-                }}>
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                      <div style={{fontSize:'2.5rem',fontWeight:800,fontFamily:'monospace',lineHeight:1,fontVariantNumeric:'tabular-nums',color:time<=10&&mode==='timer'&&time>0?'#ef4444':'#fff'}}>{formatTime(time)}</div>
-                      <div style={{display:'flex', gap:4}}>
-                          <button onClick={()=>setViewMode('fullscreen')} className="btn" style={{padding:4, background:'transparent'}} title="Fullscreen"><Icons.Maximize/></button>
-                          <button onClick={()=>setViewMode('mini')} className="btn" style={{padding:4, background:'transparent'}} title="Minimize"><Icons.Minimize/></button>
-                          <button onClick={onClose} style={{background:'none',border:'none',color:'#ef4444',cursor:'pointer',padding:4}}><Icons.X/></button>
-                      </div>
-                  </div>
-                  <select onChange={handleSelectTime} style={{background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.1)',color:'#fff',padding:'8px',borderRadius:'8px',fontSize:'0.9rem',outline:'none',cursor:'pointer',width:'100%'}} defaultValue=""><option value="" disabled>Set Timer...</option>{timeOptions.map((opt,i)=>(<option key={i} value={opt.val} style={{color:'#000'}}>{opt.label}</option>))}</select>
-                  <div style={{display:'flex',gap:8}}>
-                    <button onClick={()=>setIsRunning(!isRunning)} className="btn" style={{flex:1,background:isRunning?'#ef4444':'#22c55e',color:'white',justifyContent:'center',padding:'10px'}}>{isRunning?"STOP":"START"}</button>
-                    <button onClick={handleReset} className="btn" style={{background:'rgba(255,255,255,0.1)',justifyContent:'center',padding:'10px',width:'44px'}}><Icons.RotateCcw/></button>
-                  </div>
-                </div>
-            </DraggableBox>
-          );
-        };
+  if (viewMode === 'fullscreen') {
+      return (
+          <div style={{position:'absolute', inset:0, zIndex:40, background:'rgba(15,23,42,0.95)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center'}}>
+              <div style={{fontSize:'25vmin', fontWeight:900, fontFamily:'monospace', fontVariantNumeric:'tabular-nums', lineHeight:1, color: time<=10 && mode==='timer' && time>0 ? '#ef4444' : '#fff'}}>
+                  {formatTime(time)}
+              </div>
+              <div style={{display:'flex', gap:20, marginTop:20}}>
+                  <button onClick={()=>setIsRunning(!isRunning)} className="btn" style={{background: isRunning?'#ef4444':'#22c55e', fontSize:'2rem', padding:'15px 40px'}}>{isRunning ? <Icons.Pause/> : <Icons.Play/>}</button>
+                  <button onClick={handleReset} className="btn" style={{background:'rgba(255,255,255,0.1)', fontSize:'2rem', padding:'15px 40px'}}><Icons.RotateCcw/></button>
+                  <button onClick={()=>setViewMode('window')} className="btn" style={{background:'rgba(255,255,255,0.1)', fontSize:'2rem', padding:'15px 40px'}}><Icons.Minimize/></button>
+              </div>
+          </div>
+      );
+  }
+  if (viewMode === 'mini') {
+      return (
+          <DraggableBox x={16} y={70} style={{zIndex:55}}>
+              <div style={{background: isRunning ? (time<=10 && mode==='timer' ? '#ef4444' : '#22c55e') : '#334155', padding:'8px 12px', borderRadius:30, display:'flex', alignItems:'center', gap:10, boxShadow:'0 4px 12px rgba(0,0,0,0.3)', border:'2px solid rgba(255,255,255,0.2)'}}>
+                  <span style={{fontWeight:800, fontFamily:'monospace', fontSize:'1.2rem'}}>{formatTime(time)}</span>
+                  <button onClick={()=>setIsRunning(!isRunning)} style={{background:'none', border:'none', color:'white', cursor:'pointer'}}>{isRunning ? <Icons.Pause/> : <Icons.Play/>}</button>
+                  <button onClick={()=>setViewMode('window')} style={{background:'none', border:'none', color:'white', cursor:'pointer'}}><Icons.Maximize/></button>
+              </div>
+          </DraggableBox>
+      );
+  }
+  return (
+    <DraggableBox x={16} y={70} style={{zIndex:55}}>
+        <div style={{
+            padding:'16px', background:'rgba(15,23,42,0.9)', backdropFilter:'blur(10px)',
+            borderRadius:'16px', border:'1px solid rgba(255,255,255,0.15)',
+            boxShadow:'0 10px 30px rgba(0,0,0,0.4)', display:'flex', flexDirection:'column',
+            gap:'12px', minWidth:'220px'
+        }}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div style={{fontSize:'2.5rem',fontWeight:800,fontFamily:'monospace',lineHeight:1,fontVariantNumeric:'tabular-nums',color:time<=10&&mode==='timer'&&time>0?'#ef4444':'#fff'}}>{formatTime(time)}</div>
+              <div style={{display:'flex', gap:4}}>
+                  <button onClick={()=>setViewMode('fullscreen')} className="btn" style={{padding:4, background:'transparent'}} title="Fullscreen"><Icons.Maximize/></button>
+                  <button onClick={()=>setViewMode('mini')} className="btn" style={{padding:4, background:'transparent'}} title="Minimize"><Icons.Minimize/></button>
+                  <button onClick={onClose} style={{background:'none',border:'none',color:'#ef4444',cursor:'pointer',padding:4}}><Icons.X/></button>
+              </div>
+          </div>
+          <select onChange={handleSelectTime} style={{background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.1)',color:'#fff',padding:'8px',borderRadius:'8px',fontSize:'0.9rem',outline:'none',cursor:'pointer',width:'100%'}} defaultValue=""><option value="" disabled>Set Timer...</option>{timeOptions.map((opt,i)=>(<option key={i} value={opt.val} style={{color:'#000'}}>{opt.label}</option>))}</select>
+          <div style={{display:'flex',gap:8}}>
+            <button onClick={()=>setIsRunning(!isRunning)} className="btn" style={{flex:1,background:isRunning?'#ef4444':'#22c55e',color:'white',justifyContent:'center',padding:'10px'}}>{isRunning?"STOP":"START"}</button>
+            <button onClick={handleReset} className="btn" style={{background:'rgba(255,255,255,0.1)',justifyContent:'center',padding:'10px',width:'44px'}}><Icons.RotateCcw/></button>
+          </div>
+        </div>
+    </DraggableBox>
+  );
+};
 
         const Scoreboard = ({ teams, scores, onUpdateScore, onClose }) => {
           return (
@@ -1023,8 +1025,7 @@ const HelpModal = ({ onClose }) => {
             );
         };
 
-const MarbleJar = ({ audioCtx, names, onClose, marbles, setMarbles, target, setTarget, reward, setReward }) => {
-            // --- STATE ---
+const MarbleJar = ({ audioCtx, names, onClose, marbles, setMarbles, target, setTarget, reward, setReward }) => {            // --- STATE ---
             const [viewMode, setViewMode] = useState('window'); 
             const [jarSize, setJarSize] = useState('medium'); 
             const [ballSize, setBallSize] = useState('medium');
@@ -1406,12 +1407,27 @@ const initPhysics = () => {
                 );
             }
 
-            // 2. FULLSCREEN VIEW
+// 2. FULLSCREEN VIEW (BOARD MODE)
             if (viewMode === 'full') {
                 return (
-                    <div style={{position:'fixed', inset:0, zIndex:100, background:'rgba(15,23,42,0.98)', display:'flex', flexDirection:'column', alignItems:'center', padding: '10px 20px'}}>
+                    <div style={{
+                        position:'absolute', 
+                        inset:0, 
+                        zIndex:40, // Layers BEHIND the sidebar but OVER the wheel
+                        background:'rgba(15,23,42,0.98)', 
+                        display:'flex', 
+                        flexDirection:'column', 
+                        alignItems:'center', 
+                        padding: '10px 20px'
+                    }}>
+                        
+                        {/* TOP BAR CONTROLS */}
                         <div style={{width: '100%', maxWidth: 800, display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 80, flexShrink: 0, zIndex: 120}}>
+                            
+                            {/* Empty div for balance */}
                             <div style={{width: 100}}></div>
+                            
+                            {/* Score & Banner */}
                             <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
                                 <div style={{
                                     background: showWinBanner ? '#22c55e' : 'rgba(255,255,255,0.1)', 
@@ -1426,16 +1442,19 @@ const initPhysics = () => {
                                 </div>
                                 {raffleWinner && (<div style={{marginTop: 10, background: '#fcd34d', color: '#78350f', padding: '5px 15px', borderRadius: 10, fontWeight: 800, animation: 'modalPop 0.5s'}}>WINNER: {raffleWinner}</div>)}
                             </div>
+
+                            {/* Window Controls */}
                             <div style={{display:'flex', gap:10, width:100, justifyContent:'flex-end'}}>
                                 <button onClick={() => setViewMode('window')} className="btn" style={{background:'rgba(255,255,255,0.1)', fontSize:'1.2rem', padding:'10px'}} title="Shrink"><Icons.Minimize/></button>
                                 <button onClick={onClose} className="btn" style={{background:'rgba(239,68,68,0.2)', color:'#ef4444', fontSize:'1.2rem', padding:'10px'}}><Icons.X/></button>
                             </div>
                         </div>
 
+                        {/* MIDDLE: PHYSICS AREA */}
                         <div style={{flex: 1, display:'flex', alignItems:'center', justifyContent:'center', width:'100%', position:'relative', minHeight: 0}}>
                             <div ref={jarWrapperRef} style={{position: 'relative', width: '100%', maxWidth: 600, height: '100%'}}>
                                 {showSlotEditor && (
-                                    <div style={{position:'absolute', inset:0, background:'rgba(0,0,0,0.8)', zIndex:20, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(5px)'}}>
+                                    <div style={{position:'absolute', inset:0, background:'rgba(0,0,0,0.8)', zIndex:130, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(5px)'}}>
                                         <h3 style={{color:'white', marginBottom:10}}>Edit Slots</h3>
                                         <textarea value={customSlotInput} onChange={(e)=>setCustomSlotInput(e.target.value)} style={{width:'100%', height:100, marginBottom:10, background:'rgba(255,255,255,0.1)', color:'white', border:'1px solid rgba(255,255,255,0.2)', borderRadius:8, padding:10}} placeholder="Enter labels separated by commas..."/>
                                         <button onClick={()=>setShowSlotEditor(false)} className="btn" style={{background:'#3b82f6', color:'white'}}>Done</button>
@@ -1447,6 +1466,7 @@ const initPhysics = () => {
                             </div>
                         </div>
 
+                        {/* BOTTOM CONTROLS */}
                         <div style={{display:'flex', gap:20, marginTop:10, width: '100%', maxWidth: 800, justifyContent:'center', alignItems:'center', zIndex: 120, flexShrink: 0, paddingBottom: 20}}>
                             <div style={{display:'flex', flexDirection:'column', gap:5}}>
                                 <div style={{display:'flex', gap:5}}>
@@ -1583,6 +1603,100 @@ const initPhysics = () => {
                 setProjectorMode(false);
             }
         };
+        // --- VIEW CONTROLLER ---
+const showWheel = () => {
+    // 1. Close "Board Mode" / Full Screen overlays
+    if (trafficMode === 'full') setTrafficMode('sidebar');
+    setShowBreath(false);
+    
+    // 2. Close large modals that hide the wheel
+    setShowSeating(false);
+    setShowBillboard(false);
+    setShowGroups(false);
+    setShowLineup(false);
+    setShowPoll(false);
+    setShowBrainBreak(false);
+    
+    // 3. We DO NOT close small widgets (Timer, Noise, etc.) 
+    // because the teacher might be using them alongside the wheel.
+};
+        // --- CALM BREATH SUITE ---
+const [showBreath, setShowBreath] = useState(false);
+const [showBreathTips, setShowBreathTips] = useState(true);
+const [breathMode, setBreathMode] = useState('relax'); // 'relax', 'focus', 'balance'
+const [breathPhase, setBreathPhase] = useState('idle'); 
+const [breathCount, setBreathCount] = useState(4);
+const [breathText, setBreathText] = useState("Get Ready");
+
+// CONFIGURATIONS FOR THE 3 MODES
+const BREATH_PATTERNS = {
+    relax: { 
+        name: "Anxiety Relief (4-7-8)", 
+        color: '#8b5cf6', // Violet
+        phases: { in: 4, hold: 7, out: 8, rest: 1 } 
+    },
+    focus: { 
+        name: "Box Breathing (4-4-4-4)", 
+        color: '#3b82f6', // Blue
+        phases: { in: 4, hold: 4, out: 4, rest: 4 } 
+    },
+    balance: { 
+        name: "Coherence (5-5)", 
+        color: '#10b981', // Emerald
+        phases: { in: 5, hold: 0, out: 5, rest: 0 } 
+    }
+};
+
+// INITIALIZER
+useEffect(() => {
+    if (showBreath) {
+        setBreathPhase('in');
+        setBreathCount(BREATH_PATTERNS[breathMode].phases.in);
+        setBreathText("Breathe In");
+    } else {
+        setBreathPhase('idle');
+    }
+}, [showBreath, breathMode]);
+
+// MAIN TIMER LOOP
+useEffect(() => {
+    if (!showBreath) return;
+
+    const timer = setInterval(() => {
+        setBreathCount(prev => {
+            if (prev > 1) return prev - 1;
+
+            // PHASE SWITCHER LOGIC
+            const config = BREATH_PATTERNS[breathMode].phases;
+            let nextPhase = 'in';
+            let nextText = "Breathe In";
+            let nextDuration = config.in;
+
+            if (breathPhase === 'in') {
+                nextPhase = 'hold'; nextText = "Hold"; nextDuration = config.hold;
+            } else if (breathPhase === 'hold') {
+                nextPhase = 'out'; nextText = "Breathe Out"; nextDuration = config.out;
+            } else if (breathPhase === 'out') {
+                nextPhase = 'rest'; nextText = "Rest"; nextDuration = config.rest;
+            } else if (breathPhase === 'rest') {
+                nextPhase = 'in'; nextText = "Breathe In"; nextDuration = config.in;
+            }
+
+            // AUTO-SKIP ZERO DURATION PHASES (For 'Balance' mode)
+            if (nextDuration === 0) {
+                // If the next phase is 0, we recursively skip to the one after
+                if(nextPhase === 'hold') { nextPhase = 'out'; nextText = "Breathe Out"; nextDuration = config.out; }
+                else if(nextPhase === 'rest') { nextPhase = 'in'; nextText = "Breathe In"; nextDuration = config.in; }
+            }
+
+            setBreathPhase(nextPhase);
+            setBreathText(nextText);
+            return nextDuration;
+        });
+    }, 1000);
+
+    return () => clearInterval(timer);
+}, [showBreath, breathPhase, breathMode]);
           const [names, setNames] = useState(defaultNames);
           const [fastMode, setFastMode] = useState(false);
           const [inputText, setInputText] = useState(defaultNames.join('\n'));
@@ -2259,7 +2373,7 @@ if (e.code === 'Escape') {
             .chip.hidden { opacity: 0.4; text-decoration: line-through; background: transparent; border-color: transparent; }
 
             .projector-btn { position: absolute; top: 20px; right: 20px; z-index: 30; }
-            .mobile-toggle { position: absolute; top: 20px; left: 20px; z-index: 30; }
+            .mobile-toggle { position: absolute; top: 20px; left: 20px; z-index: 60; }
             .wheel-container { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 0; flex-shrink: 1; }
 
 @media (max-width: 1024px) {
@@ -2382,41 +2496,80 @@ if (e.code === 'Escape') {
                             {!showHeatmap && (<div style={{display:'flex', flexWrap:'wrap', gap: 4, marginTop: 8}}>{names.slice(0, 50).map((n, i) => (<div key={i} onClick={() => toggleHidden(n)} className={`chip ${hiddenNames.includes(n) ? 'hidden' : ''}`} title="Click to hide/show">{n}</div>))}</div>)}
                         </div>
 
-                        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap: 8}}>
-                            <button onClick={shuffleNames} className="btn" style={{background: 'rgba(128,128,128,0.1)'}}><Icons.Shuffle/> Shuffle</button>
-                            <button onClick={() => setMysteryMode(!mysteryMode)} className="btn" style={{background: mysteryMode ? theme.accent : 'rgba(128,128,128,0.1)', color: mysteryMode ? '#fff' : 'inherit', boxShadow: mysteryMode ? `0 0 10px ${theme.accent}` : 'none', transition: 'all 0.3s ease'}}>{mysteryMode ? <Icons.EyeOff/> : <Icons.Eye/>} {mysteryMode ? 'Mystery On' : 'Visible'}</button>
+<div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap: 8}}>
+    
+    {/* PRIMARY NAVIGATION: SHOW WHEEL */}
+    <button onClick={showWheel} className="btn" style={{gridColumn: 'span 2', background: theme.accent, color: '#fff', justifyContent:'center', fontWeight: 800, padding: 12, boxShadow: `0 4px 15px ${theme.accent}40`, marginBottom: 4}}>
+        🎡 Show Wheel
+    </button>
 
-                            <button onClick={() => setFastMode(!fastMode)} className="btn" style={{background: fastMode ? '#f97316' : 'rgba(128,128,128,0.1)', color: fastMode ? '#fff' : 'inherit', boxShadow: fastMode ? '0 0 10px #f97316' : 'none'}}>
-    {fastMode ? "⚡ Fast Mode: On" : "🎡 Fast Mode: Off"}
-</button>
-                            
-                            <button onClick={() => {setBattleMode(!battleMode); setBloomMode('off'); setBattleStage('idle'); setRapidMode(false);}} className="btn" style={{background: battleMode ? '#f59e0b' : 'rgba(128,128,128,0.1)', color: battleMode ? '#fff' : 'inherit', boxShadow: battleMode ? '0 0 10px #f59e0b' : 'none'}}><Icons.Swords/> Battle</button>
-                            <button onClick={() => setFairMode(!fairMode)} className="btn" style={{background: fairMode ? '#10b981' : 'rgba(128,128,128,0.1)', color: fairMode ? '#fff' : 'inherit', boxShadow: fairMode ? '0 0 10px #10b981' : 'none'}}><Icons.Scales/> Fair Mode</button>
+    {/* SECTION 1: SPINNER CONTROLS */}
+    <button onClick={shuffleNames} className="btn" style={{background: 'rgba(128,128,128,0.1)'}}>
+        <Icons.Shuffle/> Shuffle
+    </button>
+    <button onClick={() => setFairMode(!fairMode)} className="btn" style={{background: fairMode ? '#10b981' : 'rgba(128,128,128,0.1)', color: fairMode ? '#fff' : 'inherit', boxShadow: fairMode ? '0 0 10px #10b981' : 'none'}}>
+        <Icons.Scales/> Fair Mode
+    </button>
 
-                            <button onClick={() => setShowNoiseMeter(!showNoiseMeter)} className="btn" style={{background: 'rgba(128,128,128,0.1)'}}>🎤 Noise Meter</button>
-                            <button onClick={() => setShowGroups(true)} className="btn" style={{background: 'rgba(128,128,128,0.1)'}}><Icons.Users/> Teams</button>
-                            
-                            <button onClick={() => setShowBrainBreak(!showBrainBreak)} className="btn" style={{background: 'rgba(128,128,128,0.1)'}}>⚡ Strategy</button>
-                            <button onClick={() => setShowPoll(!showPoll)} className="btn" style={{background: 'rgba(128,128,128,0.1)'}}>📊 Poll</button>
-                            
-                            <button onClick={generateLineup} className="btn" style={{background: 'rgba(128,128,128,0.1)'}}>📜 Lineup</button>
-                            <button onClick={() => setShowTimer(!showTimer)} className="btn" style={{background: showTimer ? theme.accent : 'rgba(128,128,128,0.1)', color: showTimer ? '#fff' : 'inherit', justifyContent: 'center'}}><Icons.Clock/> {showTimer ? "Hide Timer" : "Timer"}</button>
+    <button onClick={() => setFastMode(!fastMode)} className="btn" style={{background: fastMode ? '#f97316' : 'rgba(128,128,128,0.1)', color: fastMode ? '#fff' : 'inherit', boxShadow: fastMode ? '0 0 10px #f97316' : 'none'}}>
+        {fastMode ? "⚡ Fast Mode" : "🎡 Normal Spin"}
+    </button>
+    <button onClick={() => setMysteryMode(!mysteryMode)} className="btn" style={{background: mysteryMode ? theme.accent : 'rgba(128,128,128,0.1)', color: mysteryMode ? '#fff' : 'inherit', boxShadow: mysteryMode ? `0 0 10px ${theme.accent}` : 'none', transition: 'all 0.3s ease'}}>
+        {mysteryMode ? <Icons.EyeOff/> : <Icons.Eye/>} {mysteryMode ? 'Mystery On' : 'Visible'}
+    </button>
 
-                            {/* ROW 6: Seating & Marble Jar */}
-                            <button onClick={() => setShowSeating(true)} className="btn" style={{background: 'rgba(128,128,128,0.1)', justifyContent:'center'}}>
-                                <Icons.Grid/> Seating
-                            </button>
-                            <button onClick={() => setShowMarbleJar(!showMarbleJar)} className="btn" style={{background: 'rgba(128,128,128,0.1)', justifyContent:'center'}}>
-                                <Icons.Jar/> Marble Jar
-                            </button>
+    {/* SECTION 2: ACTIVITIES */}
+    <button onClick={() => {setBattleMode(!battleMode); setBloomMode('off'); setBattleStage('idle'); setRapidMode(false);}} className="btn" style={{background: battleMode ? '#f59e0b' : 'rgba(128,128,128,0.1)', color: battleMode ? '#fff' : 'inherit', boxShadow: battleMode ? '0 0 10px #f59e0b' : 'none'}}>
+        <Icons.Swords/> Battle Mode
+    </button>
+    <button onClick={() => setShowBrainBreak(!showBrainBreak)} className="btn" style={{background: 'rgba(128,128,128,0.1)'}}>
+        <Icons.Zap/> Strategy
+    </button>
 
-                            <div style={{display:'flex', gap: 4, gridColumn: 'span 2'}}>
-                                <button onClick={toggleBloomMode} className="btn" style={{flex: 1, background: bloomMode !== 'off' ? '#3b82f6' : 'rgba(128,128,128,0.1)', color: bloomMode !== 'off' ? '#fff' : 'inherit', boxShadow: bloomMode !== 'off' ? '0 0 10px #3b82f6' : 'none'}}><Icons.Brain/> {bloomMode === 'solo' ? "Concept Only" : bloomMode === 'dual' ? "Name + Concept" : "Concept Mode"}</button>
-                                <button onClick={() => setShowConceptEdit(true)} className="btn" style={{background: 'rgba(128,128,128,0.1)', padding: 10}} title="Edit Concepts"><Icons.Edit/></button>
-                            </div>
+    <button onClick={() => setShowGroups(true)} className="btn" style={{background: 'rgba(128,128,128,0.1)'}}>
+        <Icons.Users/> Teams
+    </button>
+    <button onClick={generateLineup} className="btn" style={{background: 'rgba(128,128,128,0.1)'}}>
+        📜 Lineup
+    </button>
 
-                            <button onClick={() => setShowTodo(!showTodo)} className="btn" style={{gridColumn: 'span 2', background: showTodo ? theme.accent : 'rgba(128,128,128,0.1)', color: showTodo ? '#fff' : 'inherit', justifyContent: 'center'}}><Icons.Check/> {showTodo ? "Hide Tasks" : "To-Do List"}</button>
-                        </div>
+    {/* SECTION 3: MANAGEMENT */}
+    <button onClick={() => setShowPoll(!showPoll)} className="btn" style={{background: 'rgba(128,128,128,0.1)'}}>
+        <Icons.BarChart/> Live Poll
+    </button>
+    <button onClick={() => setShowTimer(!showTimer)} className="btn" style={{background: showTimer ? theme.accent : 'rgba(128,128,128,0.1)', color: showTimer ? '#fff' : 'inherit', justifyContent: 'center'}}>
+        <Icons.Clock/> {showTimer ? "Hide Timer" : "Timer"}
+    </button>
+
+    <button onClick={() => setShowSeating(true)} className="btn" style={{background: 'rgba(128,128,128,0.1)', justifyContent:'center'}}>
+        <Icons.Grid/> Seating
+    </button>
+    <button onClick={() => setShowMarbleJar(!showMarbleJar)} className="btn" style={{background: 'rgba(128,128,128,0.1)', justifyContent:'center'}}>
+        <Icons.Jar/> Marble Jar
+    </button>
+
+    {/* SECTION 4: ENVIRONMENT */}
+    <button onClick={() => setShowNoiseMeter(!showNoiseMeter)} className="btn" style={{background: 'rgba(128,128,128,0.1)'}}>
+        🎤 Noise Meter
+    </button>
+    
+    {/* CALM BREATH (Moved here, neutral style) */}
+    <button onClick={() => setShowBreath(true)} className="btn" style={{background: 'rgba(128,128,128,0.1)', justifyContent:'center'}}>
+        <Icons.Activity/> Calm Breath
+    </button>
+
+    {/* FULL WIDTH ITEMS */}
+    <div style={{display:'flex', gap: 4, gridColumn: 'span 2'}}>
+        <button onClick={toggleBloomMode} className="btn" style={{flex: 1, background: bloomMode !== 'off' ? '#3b82f6' : 'rgba(128,128,128,0.1)', color: bloomMode !== 'off' ? '#fff' : 'inherit', boxShadow: bloomMode !== 'off' ? '0 0 10px #3b82f6' : 'none'}}>
+            <Icons.Brain/> {bloomMode === 'solo' ? "Concept Only" : bloomMode === 'dual' ? "Name + Concept" : "Concept Mode"}
+        </button>
+        <button onClick={() => setShowConceptEdit(true)} className="btn" style={{background: 'rgba(128,128,128,0.1)', padding: 10}} title="Edit Concepts"><Icons.Edit/></button>
+    </div>
+
+    <button onClick={() => setShowTodo(!showTodo)} className="btn" style={{gridColumn: 'span 2', background: showTodo ? theme.accent : 'rgba(128,128,128,0.1)', color: showTodo ? '#fff' : 'inherit', justifyContent: 'center'}}>
+        <Icons.Check/> {showTodo ? "Hide Tasks" : "To-Do List"}
+    </button>
+</div>
 
                         <div style={{marginTop: 8}}>
                             <span className="section-title">Rapid Fire (Multi-Pick)</span>
@@ -2435,20 +2588,28 @@ if (e.code === 'Escape') {
                              </div>
                         </div>
 
-                        <div style={{marginTop: 20}}>
-                             {trafficMode === 'sidebar' ? (
-                                 <div style={{display:'flex', gap:8}}>
-                                     <div style={{flex: 1, display:'flex', justifyContent:'space-evenly', background:'rgba(0,0,0,0.2)', padding: '12px 0', borderRadius: 12, border:'1px solid rgba(255,255,255,0.05)'}}>
-                                         {['red', 'yellow', 'green'].map(color => (
-                                             <button key={color} onClick={() => setTrafficLight(color)} style={{width: 40, height: 40, borderRadius: '50%', cursor: 'pointer', border: '3px solid rgba(255,255,255,0.15)', background: color === 'red' ? '#ef4444' : color === 'yellow' ? '#eab308' : '#22c55e', opacity: trafficLight === color ? 1 : 0.25, transform: trafficLight === color ? 'scale(1.15)' : 'scale(1)', boxShadow: trafficLight === color ? `0 0 20px ${color === 'red' ? '#ef4444' : color === 'yellow' ? '#eab308' : '#22c55e'}` : 'none', transition: 'all 0.3s ease'}} />
-                                         ))}
-                                     </div>
-                                     <button onClick={() => setTrafficMode('floating')} className="btn" style={{width: 50, justifyContent:'center', background:'rgba(255,255,255,0.1)'}} title="Project to Screen"><Icons.Maximize/></button>
-                                 </div>
-                             ) : (
-                                 <button onClick={() => setTrafficMode('sidebar')} className="btn" style={{width:'100%', justifyContent:'center', background:'rgba(34,197,94,0.15)', color:'#4ade80', padding: 16, border:'1px dashed rgba(34,197,94,0.3)'}}><Icons.ArrowDown/> Active on Screen (Click to Return)</button>
-                             )}
-                        </div>
+<div style={{marginTop: 20}}>
+     {trafficMode === 'sidebar' ? (
+         <div style={{display:'flex', gap:8}}>
+             {/* The Lights */}
+             <div style={{flex: 1, display:'flex', justifyContent:'space-evenly', background:'rgba(0,0,0,0.2)', padding: '12px 0', borderRadius: 12, border:'1px solid rgba(255,255,255,0.05)'}}>
+                 {['red', 'yellow', 'green'].map(color => (
+                     <button key={color} onClick={() => setTrafficLight(color)} style={{width: 40, height: 40, borderRadius: '50%', cursor: 'pointer', border: '3px solid rgba(255,255,255,0.15)', background: color === 'red' ? '#ef4444' : color === 'yellow' ? '#eab308' : '#22c55e', opacity: trafficLight === color ? 1 : 0.25, transform: trafficLight === color ? 'scale(1.15)' : 'scale(1)', boxShadow: trafficLight === color ? `0 0 20px ${color === 'red' ? '#ef4444' : color === 'yellow' ? '#eab308' : '#22c55e'}` : 'none', transition: 'all 0.3s ease'}} />
+                 ))}
+             </div>
+             
+             {/* Mode Buttons */}
+             <div style={{display:'flex', flexDirection:'column', gap:4}}>
+                 <button onClick={() => setTrafficMode('floating')} className="btn" style={{padding: '4px 8px', justifyContent:'center', background:'rgba(255,255,255,0.1)'}} title="Open Widget"><Icons.Minimize style={{transform: 'rotate(45deg)'}}/></button>
+                 <button onClick={() => setTrafficMode('full')} className="btn" style={{padding: '4px 8px', justifyContent:'center', background:'rgba(255,255,255,0.1)'}} title="Full Screen"><Icons.Maximize/></button>
+             </div>
+         </div>
+     ) : (
+         <button onClick={() => setTrafficMode('sidebar')} className="btn" style={{width:'100%', justifyContent:'center', background:'rgba(34,197,94,0.15)', color:'#4ade80', padding: 16, border:'1px dashed rgba(34,197,94,0.3)'}}>
+             <Icons.ArrowDown/> {trafficMode === 'full' ? "Exit Full Screen" : "Close Widget"}
+         </button>
+     )}
+</div>
 
                         <div style={{marginTop: 20}}>
                              <span className="section-title">Big Message (Billboard)</span>
@@ -2495,6 +2656,200 @@ if (e.code === 'Escape') {
                         </DraggableBox>
                     )}
 
+{/* FULL SCREEN TRAFFIC LIGHT (Board Mode) */}
+{trafficMode === 'full' && (
+    <div style={{
+        position: 'absolute', 
+        inset: 0, 
+        background: '#1e293b', 
+        zIndex: 40, 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        flexDirection: 'column'
+    }}>
+        {/* Top Controls (Just Exit) */}
+        <div style={{position: 'absolute', top: 20, right: 20, pointerEvents: 'auto'}}>
+            <button onClick={() => setTrafficMode('sidebar')} className="btn" style={{background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 30, padding: '10px 20px', color: 'white', fontWeight: 'bold', boxShadow: '0 4px 12px rgba(0,0,0,0.3)'}}>
+                <Icons.Minimize/> Exit Big Screen
+            </button>
+        </div>
+        
+        {/* The Giant Lights */}
+        <div style={{
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '4vh', 
+            alignItems: 'center',
+            height: '80%',
+            justifyContent: 'center'
+        }}>
+            {['red', 'yellow', 'green'].map(color => (
+                <div 
+                    key={color}
+                    onClick={() => setTrafficLight(color)}
+                    style={{
+                        width: '22vh', 
+                        height: '22vh', 
+                        borderRadius: '50%',
+                        background: color === 'red' ? '#ef4444' : color === 'yellow' ? '#eab308' : '#22c55e',
+                        opacity: trafficLight === color ? 1 : 0.2,
+                        boxShadow: trafficLight === color 
+                            ? `0 0 80px ${color === 'red' ? '#ef4444' : color === 'yellow' ? '#eab308' : '#22c55e'}, inset 0 0 30px rgba(255,255,255,0.4)` 
+                            : 'inset 0 0 20px rgba(0,0,0,0.5)',
+                        border: '6px solid rgba(0,0,0,0.2)',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                        transform: trafficLight === color ? 'scale(1.1)' : 'scale(1)'
+                    }}
+                />
+            ))}
+        </div>
+    </div>
+)}
+
+{/* CALM BREATH SUITE OVERLAY (Board Mode) */}
+{showBreath && (
+    <div style={{
+        position: 'absolute', 
+        inset: 0, 
+        background: 'rgba(15, 23, 42, 0.98)', 
+        backdropFilter: 'blur(20px)', 
+        zIndex: 40, // Layers correctly behind the sidebar
+        display: 'flex', 
+        flexDirection: 'column', 
+        padding: 20
+    }}>
+        
+        {/* TOP CONTROLS (Only Close Button Needed) */}
+        <div style={{
+            position: 'absolute', top: 20, right: 20, 
+            zIndex: 50, pointerEvents: 'auto'
+        }}>
+            <button onClick={() => setShowBreath(false)} className="btn" style={{background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 30, padding: '10px 20px', color: 'white', fontWeight: 'bold'}}>
+                Close &times;
+            </button>
+        </div>
+
+        {/* MAIN BREATHING CIRCLE */}
+        <div style={{
+            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', position: 'relative'
+        }}>
+            <div style={{
+                width: '35vmin', height: '35vmin', borderRadius: '50%',
+                background: breathPhase === 'in' ? BREATH_PATTERNS[breathMode].color : (breathPhase === 'out' ? '#64748b' : '#eab308'),
+                boxShadow: `0 0 ${breathPhase === 'hold' || breathPhase === 'rest' ? '60px' : '30px'} ${breathPhase === 'in' ? BREATH_PATTERNS[breathMode].color : (breathPhase === 'out' ? '#64748b' : '#eab308')}`,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                transition: `transform ${breathPhase === 'in' ? BREATH_PATTERNS[breathMode].phases.in : (breathPhase === 'out' ? BREATH_PATTERNS[breathMode].phases.out : 0)}s linear, background 1s ease`, 
+                transform: breathPhase === 'in' ? 'scale(1.5)' : (breathPhase === 'hold' ? 'scale(1.5)' : 'scale(1)'),
+                opacity: (breathPhase === 'rest') ? 0.6 : 1
+            }}>
+                <div style={{fontSize: '5rem', fontWeight: 900, color: 'white', textShadow: '0 4px 20px rgba(0,0,0,0.4)', fontVariantNumeric: 'tabular-nums'}}>
+                    {breathCount}
+                </div>
+                <div style={{fontSize: 'clamp(1rem, 2vw, 1.6rem)', textTransform: 'uppercase', letterSpacing: 3, color: 'rgba(255,255,255,0.95)', marginTop: 0, fontWeight: 700}}>
+                    {breathText}
+                </div>
+            </div>
+
+            {/* DESCRIPTION TEXT */}
+            <div style={{marginTop: '10vh', minHeight: 60, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                {showBreathTips && (
+                    <div style={{position: 'relative', opacity: 0.7, fontSize: '1.1rem', fontStyle: 'italic', maxWidth: 600, textAlign: 'center', lineHeight: 1.6, padding: '10px 40px', background: 'rgba(0,0,0,0.2)', borderRadius: 12}}>
+                        {breathMode === 'relax' && "Long exhales signal safety to the nervous system."}
+                        {breathMode === 'focus' && "Box breathing sharpens concentration and alertness."}
+                        {breathMode === 'balance' && "Equal breathing restores heart rate coherence."}
+                        
+                        <button 
+                            onClick={() => setShowBreathTips(false)} 
+                            style={{position: 'absolute', top: 5, right: 5, background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: 4}}
+                            title="Hide Description"
+                        >
+                            <Icons.X style={{width: 14, height: 14}}/>
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+
+        {/* MODE SWITCHER */}
+        <div style={{marginBottom: 20, display: 'flex', gap: 10, background: 'rgba(255,255,255,0.05)', padding: 10, borderRadius: 20, flexWrap: 'wrap', justifyContent: 'center', zIndex: 50}}>
+            {Object.keys(BREATH_PATTERNS).map(mode => (
+                <button 
+                    key={mode} 
+                    onClick={() => { 
+                        setBreathMode(mode); 
+                        setBreathPhase('rest'); 
+                        setShowBreathTips(true); 
+                    }} 
+                    style={{
+                        background: breathMode === mode ? BREATH_PATTERNS[mode].color : 'transparent',
+                        color: 'white',
+                        border: 'none',
+                        padding: '10px 20px',
+                        borderRadius: 16,
+                        cursor: 'pointer',
+                        fontWeight: breathMode === mode ? 900 : 500,
+                        opacity: breathMode === mode ? 1 : 0.6,
+                        transition: 'all 0.3s ease',
+                        fontSize: '0.9rem'
+                    }}
+                >
+                    {BREATH_PATTERNS[mode].name}
+                </button>
+            ))}
+        </div>
+    </div>
+)}
+
+{/* MISSING TRAFFIC LIGHT WIDGET */}
+{trafficMode === 'floating' && (
+    <DraggableBox x={100} y={100} style={{zIndex: 60}}>
+        <div style={{
+            background: 'rgba(15, 23, 42, 0.95)', 
+            padding: '20px', 
+            borderRadius: '24px', 
+            border: '2px solid rgba(255,255,255,0.1)', 
+            backdropFilter: 'blur(12px)',
+            boxShadow: '0 30px 60px rgba(0,0,0,0.6)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '20px'
+        }}>
+            <div style={{width: '100%', display: 'flex', justifyContent: 'flex-end'}}>
+                <button 
+                    onClick={() => setTrafficMode('sidebar')} 
+                    style={{background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 4}}
+                    title="Minimize to Sidebar"
+                >
+                    <Icons.Minimize />
+                </button>
+            </div>
+            
+            {['red', 'yellow', 'green'].map(color => (
+                <div 
+                    key={color}
+                    onClick={() => setTrafficLight(color)}
+                    style={{
+                        width: 100, 
+                        height: 100, 
+                        borderRadius: '50%',
+                        background: color === 'red' ? '#ef4444' : color === 'yellow' ? '#eab308' : '#22c55e',
+                        opacity: trafficLight === color ? 1 : 0.2,
+                        boxShadow: trafficLight === color 
+                            ? `0 0 40px ${color === 'red' ? '#ef4444' : color === 'yellow' ? '#eab308' : '#22c55e'}, inset 0 0 20px rgba(255,255,255,0.3)` 
+                            : 'inset 0 0 20px rgba(0,0,0,0.5)',
+                        border: '4px solid rgba(0,0,0,0.2)',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                        transform: trafficLight === color ? 'scale(1.05)' : 'scale(1)'
+                    }}
+                />
+            ))}
+        </div>
+    </DraggableBox>
+)}
                     {stickies.map(note => (
                         <DraggableBox key={note.id} x={note.x} y={note.y} style={{zIndex: 56}}>
                             <div style={{width: 200, minHeight: 200, background: note.color, boxShadow: '5px 5px 15px rgba(0,0,0,0.3)', transform: `rotate(${note.rotation}deg)`, padding: 12, borderRadius: 2, display: 'flex', flexDirection: 'column', position: 'relative', resize: 'both', overflow: 'hidden'}}>
