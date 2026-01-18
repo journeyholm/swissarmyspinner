@@ -2393,8 +2393,8 @@ if (e.code === 'Escape') {
             <div className="app" style={cssVariables}>
                 <style>{styles}</style>
                 <canvas ref={confettiCanvasRef} style={{position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 50}} />
-                <button onClick={() => setShowSettings(true)} className="mobile-toggle btn"><Icons.Settings /></button>
-
+{/* Fixed: Hide the gear button when settings are open so it doesn't block the title */}
+{!showSettings && <button onClick={() => setShowSettings(true)} className="mobile-toggle btn"><Icons.Settings /></button>}
 <div className={`sidebar ${showSettings ? 'open' : 'closed'} ${projectorMode ? 'projector-hidden' : ''}`}>
 <div style={{padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12, borderBottom: '1px solid rgba(255,255,255,0.05)'}}>
          <div style={{display:'flex', justifyContent: 'space-between', alignItems:'center'}}>
